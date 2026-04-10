@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "[post-merge] Running pocket-claw-skills sync..."
+bash "$REPO_ROOT/sync.sh"

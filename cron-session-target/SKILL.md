@@ -23,6 +23,14 @@ When the user asks to create a reminder, scheduled task, recurring check, or any
 
 Never ask the user to edit the file themselves. Always do it completely.
 
+**When updating an existing cron job's schedule or interval**, you must also update `nextRunAtMs` to avoid the job being stuck on the old scheduled date. Compute it as:
+
+```
+nextRunAtMs = current_epoch_ms + new_everyMs
+```
+
+Run `date +%s%3N` to get the current time, add the new interval, and set both `updatedAtMs` and `nextRunAtMs` to these values. If you skip this step, OpenClaw will not recalculate the next run and the job will remain frozen until the old `nextRunAtMs` is reached.
+
 ---
 
 ## Required JSON Format
@@ -274,6 +282,7 @@ openclaw gateway restart
 | Wrong ms math | Job runs at wrong interval | Use the interval reference table above |
 | Trailing comma in JSON | Entire jobs file fails to parse | Validate with `python3 -m json.tool` |
 | `enabled: false` | Job never runs | Set to `true` |
+| Updating interval without updating `nextRunAtMs` | Job stays frozen on old scheduled date | Set `nextRunAtMs = date +%s%3N + new_everyMs` |
 
 ---
 
@@ -285,4 +294,5 @@ payload field  →  "message"                            (not "text")
 recurring      →  "deleteAfterRun": false
 one-shot       →  "deleteAfterRun": true, "kind": "at"
 after editing  →  openclaw gateway restart
+update timing  →  always set nextRunAtMs = now_ms + everyMs when changing schedule
 ```
